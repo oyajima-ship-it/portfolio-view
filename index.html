@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja" class="static" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#F5F6F8" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="資産" />
+    <title>資産ポートフォリオ</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="stylesheet" href="./styles.css?v=15" />
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem("pe_theme") || "light";
+          document.documentElement.dataset.theme = theme;
+        } catch (_err) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="login" class="login">
+      <div class="login-card">
+        <p class="eyebrow">Portfolio Engine</p>
+        <h1>資産ダッシュボード</h1>
+        <form id="login-form" autocomplete="on">
+          <label class="visually-hidden" for="username">ユーザー名</label>
+          <input
+            id="username"
+            type="text"
+            name="username"
+            value="portfolio-view"
+            autocomplete="username"
+            class="visually-hidden"
+            tabindex="-1"
+          />
+          <label for="password">パスワード</label>
+          <input
+            id="password"
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            maxlength="64"
+            required
+          />
+          <button type="submit">ログイン</button>
+        </form>
+        <p id="login-error" class="error" hidden></p>
+      </div>
+    </div>
+
+    <header class="top">
+      <div>
+        <p class="eyebrow" id="as-of">—</p>
+        <h1 id="page-title">資産</h1>
+      </div>
+      <div class="top-actions">
+        <div class="theme-switch" role="group" aria-label="テーマ">
+          <button type="button" data-theme-choice="light">Light</button>
+          <button type="button" data-theme-choice="dark">Dark</button>
+          <button type="button" data-theme-choice="system">System</button>
+        </div>
+        <button type="button" id="refresh" class="ghost">データ更新</button>
+      </div>
+    </header>
+
+    <main id="app" class="hidden">
+      <section data-page="home" class="page active">
+        <div class="hero">
+          <p class="muted">保有資産合計</p>
+          <p class="hero-value" id="net-worth">—</p>
+          <p class="muted" id="daily-label">証券 前日比</p>
+          <p class="hero-sub" id="daily"></p>
+          <p class="muted hero-defs" id="hero-defs"></p>
+          <p class="freshness muted" id="freshness-lines"></p>
+        </div>
+        <section id="asset-history" class="chart-section">
+          <div class="chart-head">
+            <div>
+              <h2>資産推移</h2>
+              <p class="muted" id="chart-note">残高推移</p>
+            </div>
+            <div class="chart-values">
+              <p id="chart-value">—</p>
+              <p id="chart-delta" class="hero-sub"></p>
+            </div>
+          </div>
+          <div class="range-tabs" id="chart-ranges" role="tablist" aria-label="期間">
+            <button type="button" data-range="1M">1M</button>
+            <button type="button" data-range="3M" class="active">3M</button>
+            <button type="button" data-range="6M">6M</button>
+            <button type="button" data-range="1Y">1Y</button>
+            <button type="button" data-range="ALL">ALL</button>
+          </div>
+          <div id="asset-chart" class="asset-chart"></div>
+        </section>
+        <h2>配分</h2>
+        <div id="alloc-chart"></div>
+        <h2>目標との差</h2>
+        <div id="home-gaps" class="list"></div>
+        <article class="insight-card teaser-card" id="ai-teaser">
+          <h2>AIレビュー</h2>
+          <p id="ai-teaser-lines" class="muted">今日の確認事項は AIレビュー で見られます。</p>
+          <button type="button" class="ghost" id="ai-review">AIレビューを見る</button>
+        </article>
+      </section>
+
+      <section data-page="holdings" class="page">
+        <div class="hero compact holdings-hero">
+          <div>
+            <p class="muted">証券評価</p>
+            <p class="hero-value" id="sec-value">—</p>
+            <p class="hero-sub" id="sec-pnl"></p>
+          </div>
+          <button type="button" id="holdings-refresh" class="ghost">更新</button>
+        </div>
+        <div id="holdings" class="list holdings-list"></div>
+      </section>
+
+      <section data-page="review" class="page">
+        <p class="eyebrow" id="review-agent">Portfolio Manager</p>
+        <p class="muted" id="review-as-of"></p>
+        <h2>今日のレビュー</h2>
+        <article class="insight-card" id="review-overall"></article>
+        <section id="review-changes-block">
+          <h2>昨日からの変化</h2>
+          <div id="review-changes" class="list"></div>
+        </section>
+        <h2>Portfolio</h2>
+        <div id="review-portfolio"></div>
+        <section id="review-market-block">
+          <h2>Market / News</h2>
+          <div id="review-market"></div>
+        </section>
+        <h2>Action</h2>
+        <div id="review-actions" class="list"></div>
+        <section id="review-why-block">
+          <h2>Why</h2>
+          <div id="review-why"></div>
+        </section>
+        <section id="review-sources-block">
+          <h2>Sources</h2>
+          <div id="review-sources"></div>
+        </section>
+        <button type="button" class="ghost" id="ai-reanalyze" hidden>再分析</button>
+      </section>
+
+      <section data-page="household" class="page">
+        <p class="muted" id="plan-sub"></p>
+        <p class="callout" id="plan-rate"></p>
+        <div id="plan-stats" class="stats"></div>
+        <h2>総資産の配分</h2>
+        <div id="plan-gross-pie"></div>
+        <h2>純資産の配分</h2>
+        <div id="plan-net-pie"></div>
+        <h2>目標配分（本人金融）</h2>
+        <div id="plan-target-pie"></div>
+        <h2>いまのスリーブ（対目標）</h2>
+        <div id="plan-sleeves" class="list"></div>
+        <p class="muted" id="plan-sleeve-note" hidden></p>
+        <p class="muted" id="plan-target-note">株合計おおむね75%。教育が近づくほど現金を増やす。</p>
+        <h2>バケツ</h2>
+        <div id="plan-buckets" class="list"></div>
+        <h2>方針</h2>
+        <div id="plan-principles" class="kid-card">
+          <div class="plan" id="plan-principles-list"></div>
+        </div>
+        <h2>いまのギャップ</h2>
+        <div id="plan-gaps" class="list"></div>
+        <h2>優先アクション</h2>
+        <div id="plan-actions" class="list"></div>
+        <h2>ライフイベント</h2>
+        <div id="plan-events" class="list"></div>
+        <h2>本人の目標</h2>
+        <div id="plan-goals" class="list"></div>
+        <p class="muted" id="plan-goal-note"></p>
+        <h2>次の90日</h2>
+        <div id="plan-next" class="list"></div>
+        <p class="muted" id="plan-disclaimer"></p>
+      </section>
+
+      <section data-page="kids" class="page">
+        <p class="callout" id="kids-note"></p>
+        <div id="kids"></div>
+      </section>
+
+      <section data-page="alerts" class="page">
+        <div id="alerts" class="list"></div>
+      </section>
+    </main>
+
+    <nav class="tabbar" aria-label="主要画面">
+      <button type="button" data-nav="home" class="active">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z"/></svg>
+        資産
+      </button>
+      <button type="button" data-nav="holdings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 5h14v4H5zm0 6h14v8H5z"/></svg>
+        証券
+      </button>
+      <button type="button" data-nav="review">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 4h14a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H9l-4 3v-3H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/></svg>
+        レビュー
+      </button>
+      <button type="button" data-nav="household">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 4h12v3H6zm0 5h12v11H6z"/></svg>
+        計画
+      </button>
+      <button type="button" data-nav="kids">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 8a3 3 0 1 1 6 0 3 3 0 0 1-6 0zm-4 9a5 5 0 0 1 14 0v1H5z"/></svg>
+        子供
+      </button>
+      <button type="button" data-nav="alerts">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a6 6 0 0 1 6 6v3.5l1.5 2.5H4.5L6 12.5V9a6 6 0 0 1 6-6zm-2 16h4a2 2 0 0 1-4 0z"/></svg>
+        警報
+      </button>
+    </nav>
+
+    <script src="./app.js?v=15"></script>
+  </body>
+</html>
